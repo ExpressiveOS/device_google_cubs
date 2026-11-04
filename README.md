@@ -1,4 +1,4 @@
-# Pixel 11 (cubs) for Evolution X 17
+# Pixel 11 (cubs) for ExpressiveOS
 
 Device tree for Google Pixel 11 (`cubs`, Tensor G6 `malibu`, GKI
 6.12), built from the stock factory image `CD1A.261005.003`.
@@ -16,7 +16,7 @@ keys for some stock apps.
 
 | Image | Source |
 | --- | --- |
-| system, system_ext, product | built (Evolution X) |
+| system, system_ext, product | built (ExpressiveOS) |
 | init_boot (generic ramdisk) | built |
 | vendor_boot (first-stage fstab, recovery) | built |
 | vbmeta, vbmeta_system, vbmeta_vendor | built (verification disabled: `--flags 3`) |
@@ -36,23 +36,34 @@ vendor stays stock.
 - Sultan Alsawaf for CASS and Simple LMK.
 
 
-## Setup
+## Building
+
+ExpressiveOS builds this tree with its build kit ([`expressiveos-cheetah/`](https://github.com/denson9874/Denson9874-Device-Central/tree/main/expressiveos-cheetah)),
+in the source tree ExpressiveOS's own manifest syncs (`~/expressiveos`, set up by the kit's
+`setup.sh`). The kit's `devices/cubs.conf` holds what's particular to this phone: the lunch
+target `lineage_cubs-cp2a-user`, the model, the release folders, and where its kernel, vendor and
+firmware come from.
 
 ```bash
-# inside the Evolution X (cnb) tree
-git clone <this repo> device/google/cubs
-device/google/cubs/apply-patches.sh   # patches/: build/make (prebuilt partitions), frameworks/base (AOD brightness, favorites call lights, charging screensaver), vendor/gms (Dreamliner)
-
-# Stock factory image CD1A.261005.003 for cubs, from https://developers.google.com/android/images
-device/google/cubs/extract-images.sh <cubs-cd1a.261005.003-factory-*.zip>   # -> vendor/google/cubs-images
-cd device/google/cubs && ./extract-files.py <dumpyara dump of the cubs image>   # -> vendor/google/cubs
-
-. build/envsetup.sh
-lunch lineage_cubs-cp2a-user
-m
+EOS_DEVICE=cubs ~/expressiveos-cheetah/tools/eos-images.sh   # the build
+EOS_DEVICE=cubs ~/expressiveos-cheetah/tools/eos-pack.sh     # the fastboot zip
 ```
 
-Build the `user` variant. `userdebug` mounts debugfs early, which the stock vendor
+From the runner, that's the action `expressiveos-build` with query `device=cubs`.
+
+The manifest doesn't sync the two folders of Google's files this tree needs. The kit's
+`prepare.sh` puts them in place before each build:
+
+- `vendor/google/cubs-images`, whole stock partition images (vendor, vendor_dlkm,
+  system_dlkm, boot, dtbo, firmware), made by this tree's `extract-images.sh` from the newest
+  stock image zip on the build server (`~/android-dt/firmware/image-cubs-*.zip`, from
+  [Google's factory image](https://developers.google.com/android/images)), again only when
+  that zip changes. It isn't published.
+- `vendor/google/cubs`, the proprietary blobs from `proprietary-files.txt`, made with
+  `./extract-files.py <dumpyara dump of the cubs image>`. They aren't published; the build
+  server keeps its own copy.
+
+The kit builds the `user` variant. `userdebug` mounts debugfs early, which the stock vendor
 policy denies, and the display driver can panic on boot.
 
 Extract the blobs from the phone's own image, never from kodiak's: their contents
