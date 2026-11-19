@@ -4,4 +4,4 @@
 #
 
 PRODUCT_MAKEFILES := \
-    $(LOCAL_DIR)/lineage_cubs.mk
+    $(LOCAL_DIR)/eos_cubs.mk
